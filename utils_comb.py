@@ -190,7 +190,6 @@ def greedy_graphCond(edges, vertices=[], random_ver=False):
     A_final = []
     first = True
     verticesA = []
-    #verticesA_min = []
     if not vertices:
         vertices = [val for sublist in edges for val in sublist]
         vertices = set(vertices)
@@ -208,7 +207,6 @@ def greedy_graphCond(edges, vertices=[], random_ver=False):
             phi_temp, edges_to_cut = get_phi(verticesA_test, verticesB, edges)
             if first:  # init phi
                 verticesA = copy.deepcopy(verticesA_test)
-                #verticesA_min = copy.deepcopy(verticesA_test)
                 phi_min = phi_temp
                 phi_interval = phi_temp
                 first = False
@@ -218,7 +216,6 @@ def greedy_graphCond(edges, vertices=[], random_ver=False):
                 phi_interval = phi_temp
 
             if phi_temp < phi_min:  # update phi
-                #verticesA_min = copy.deepcopy(verticesA_test)
                 phi_min = phi_temp
                 cutted_edges = edges_to_cut
                 A_final = copy.deepcopy(verticesA)
@@ -347,7 +344,6 @@ def jocker_CommExpand(edges, vertices_A_original, phi, BF_conductance_method='jo
         max_A = forward_A_vertices
         phi_max = forward_phi_temp
         edges_to_cut = forward_edges_to_cut
-    #max_A, phi_max, edges_to_cut = bruteForce_CommExpand(edges, max_A, phi, conductance_method=BF_conductance_method) #choose 'jocker' or 'greedy'
     return max_A, phi_max, edges_to_cut
 
 def jocker_graphCond(edges, vertices=[]):
@@ -407,24 +403,15 @@ def Gen_eval(A_vertices_lists,edges_A_lists,edges,phi, vertices_A_original, time
     for i in range(len(A_vertices_lists)):
         l=len(A_vertices_lists[i])
         A_len_lists.append(l)
-        #phi_temp,_= jocker_graphCond(edges=edges_A_lists[i], vertices=A_vertices_lists[i])
-        #print(edges_A_lists[i])
         lower_bound, upper_bound = lower_bound_cheeger(edges=edges_A_lists[i])
         if lower_bound < phi and upper_bound >= phi:
-            #phi_temp, _ = bruteForce_graphCond(edges=edges_A_lists[i], vertices=A_vertices_lists[i])
-            #print(timeout/len(A_vertices_lists))
-
-            #s=start = time.time()
             t = timeout/len(A_vertices_lists)
-            #t=0.1
             phi_temp, _ = simulated_annealing_graphCond(edges=edges_A_lists[i], timeout=t, vertices=A_vertices_lists[i])
-            #print('רצוי', t)
-            #print('מצוי', time.time() - s)
+           
         elif lower_bound >= phi:
             phi_temp = lower_bound
         elif upper_bound < phi:
             phi_temp = upper_bound*0.9
-        #print(phi_temp, phi)
         A_phi_lists.append(phi_temp)
 
         if phi_temp < phi/2:
@@ -439,7 +426,6 @@ def Gen_eval(A_vertices_lists,edges_A_lists,edges,phi, vertices_A_original, time
                 bestA_len = l
 
         scores.append(score)
-    #print('eval time',time.time() - start)
     return A_phi_lists,scores,A_len_lists, best_A
 
 def Gen_selection(A_vertices_lists,edges_A_lists,scores,selection_num):
@@ -541,32 +527,18 @@ def Genetic_Algorithms_CommExpand(edges, vertices_A_original, phi,timeout):
         elapsed = time.time() - start
         remain_time = timeout - elapsed
         cond_time = min((elapsed / number_of_Gens + 0.1)**0.5,remain_time/10)
-        #cond_time =  (elapsed / number_of_Gens + 0.1)**0.5 # if remain_time > elapsed/2 else 0.5
-        #print('start',elapsed)
-        #print('cond_time',cond_time)
         A_vertices_population, edges_A_population = Gen_selection(A_vertices_population, edges_A_population, scores, selection_num=selection_num)
-        #print('selection',time.time() - start)
-        #if the selection delete all the populations
         if len(A_vertices_population) == 1:
             A_vertices_population, edges_A_population = Gen_smart_init_population(edges, vertices_A_original, number_of_Gens=selection_num)
             A_phi_lists, scores, _, best_A = Gen_eval(A_vertices_population, edges_A_population, edges, phi,best_A,timeout=cond_time)
             A_vertices_population, edges_A_population = Gen_selection(A_vertices_population, edges_A_population, scores,selection_num=selection_num)
-            #print('return to init', len(A_vertices_population))
             if len(A_vertices_population) == 1:
-                #print('break')
                 break
         A_vertices_population, edges_A_population = Gen_crossover(vertices_A_original, A_vertices_population, edges, edges_A_population, number_of_Gens,best_A)
-        #print('Gen_crossover',time.time() - start)
-
         A_vertices_population, edges_A_population = Gen_mutation(vertices_A_original,A_vertices_population, edges)
-        #print('Gen_mutation',time.time() - start)
-
         A_phi_lists,scores,_,best_A = Gen_eval(A_vertices_population, edges_A_population,edges,phi,best_A,timeout=cond_time)
-
         elapsed = time.time() - start
-        #print('Gen_eval', elapsed)
 
-    #print('end:',elapsed)
     if len(A_vertices_population) > 1:
         A_vertices_population, edges_A_population = Gen_selection(A_vertices_population, edges_A_population, scores, selection_num=selection_num)
         maxA_vertices, maxA_phi = Gen_ending_selection(A_vertices_population, edges_A_population, edges, phi,best_A)
@@ -577,9 +549,7 @@ def Genetic_Algorithms_CommExpand(edges, vertices_A_original, phi,timeout):
     return maxA_vertices, maxA_phi
 
 def SA_init(edges):
-    #vertice = random.sample(vertices, 1)[0]
     phi,_,A_final = jocker_graphCond(edges)
-
     return A_final,phi
 
 def SA_neighbour_sol(verticesA,edges):
@@ -643,10 +613,7 @@ def simulated_annealing_graphCond(edges, timeout, vertices=[]):
     zero = False
     elapsed = time.time() - start
     while elapsed < timeout and not zero:
-        #elapsed = time.time() - start
-
         for i in range(1, TL):
-
             verticesA_neighbour = SA_neighbour_sol(verticesA, edges)
 
             if len(verticesB)<2 or not verticesA_neighbour:
@@ -682,16 +649,3 @@ def simulated_annealing_graphCond(edges, timeout, vertices=[]):
         elapsed = time.time() - start
     print(elapsed)
     return phi_min, edges_to_cut_min
-
-def stopwatch(seconds):
-    start = time.time()
-    time.clock()
-    elapsed = 0
-    print(elapsed)
-    while elapsed < seconds:
-        elapsed = time.time() - start
-        elapsed = int(elapsed)
-        #time.sleep(1)
-    print(elapsed)
-
-# stopwatch(10)
