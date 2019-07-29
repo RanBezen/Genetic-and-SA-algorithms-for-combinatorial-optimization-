@@ -864,15 +864,3 @@ def simulated_annealing_graphCond(edges, timeout, vertices=[]):
         elapsed = time.time() - start
     return phi_min, edges_to_cut_min
 
-def stopwatch(seconds):
-    start = time.time()
-    time.clock()
-    elapsed = 0
-    print(elapsed)
-    while elapsed < seconds:
-        elapsed = time.time() - start
-        elapsed = int(elapsed)
-        #time.sleep(1)
-        print(elapsed)
-
-# stopwatch(10)
