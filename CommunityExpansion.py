@@ -1,6 +1,6 @@
 import argparse
 import glob
-from utils_comb import bruteForce_CommExpand, greedy_backward_CommExpand, greedy_forward_CommExpand, jocker_CommExpand,Genetic_Algorithms_CommExpand,bruteForce_graphCond
+from utils_comb import bruteForce_CommExpand, greedy_backward_CommExpand, greedy_forward_CommExpand, joker_CommExpand,Genetic_Algorithms_CommExpand,bruteForce_graphCond
 import os
 from openpyxl import Workbook, load_workbook
 
@@ -27,8 +27,8 @@ def mode(args):
             brute_force(args.infile)
         if args.algorithm == 'greedy':
             greedy(args.infile)
-        if args.algorithm == 'jocker':
-            jocker(args.infile)
+        if args.algorithm == 'joker':
+            joker(args.infile)
     elif args.mode == 'compete':
         compete(args.infile, args.timeout)
 
@@ -87,8 +87,8 @@ def brute_force(path):
     maxA_vertices, maxA_phi, edge_to_cut = bruteForce_CommExpand(edges, vertices_A,phi)
     maxA_vertices = set(maxA_vertices)
     str_A = ' '.join(str(e) for e in maxA_vertices)
-    print(str_A, '|',len(maxA_vertices), '|',maxA_phi)
-    #print('brute force:',str_A, '|',len(maxA_vertices))
+    #print(str_A, '|',len(maxA_vertices), '|',maxA_phi)
+    print(str_A)
     return maxA_vertices
 
 
@@ -100,7 +100,7 @@ def brute_force_under(path,under):
         maxA_vertices, maxA_phi, edge_to_cut = bruteForce_CommExpand(edges, vertices_A,phi)
         maxA_vertices = set(maxA_vertices)
         str_A = ' '.join(str(e) for e in maxA_vertices)
-        print(str_A, '|',len(maxA_vertices), '|',maxA_phi)
+        #print(str_A, '|',len(maxA_vertices), '|',maxA_phi)
         #print('brute force:',str_A, '|',len(maxA_vertices))
     else:
         maxA_vertices = [0,0,0,0]
@@ -110,106 +110,87 @@ def brute_force_under(path,under):
 def greedy(path):
     edges, vertices_A, phi = read_txt(path)
     maxA_vertices, maxA_phi, edge_to_cut = greedy_backward_CommExpand(edges, vertices_A,phi)
-
     str_A = ' '.join(str(e) for e in maxA_vertices)
     #print('greedy backward:',str_A, '|',len(maxA_vertices))
-    #maxA_vertices, maxA_phi, edge_to_cut = greedy_forward_CommExpand(edges, vertices_A, phi)
-    #str_A = ' '.join(str(e) for e in maxA_vertices)
-    #print('greedy forward:',str_A, '|',len(maxA_vertices))
-
     print(str_A)
 
-def jocker(path):
+def joker(path):
     edges, vertices_A, phi = read_txt(path)
-    maxA_vertices, maxA_phi, edge_to_cut = jocker_CommExpand(edges, vertices_A, phi)
+    maxA_vertices, maxA_phi, edge_to_cut = joker_CommExpand(edges, vertices_A, phi)
     str_A = ' '.join(str(e) for e in maxA_vertices)
     print(str_A)
 
-    # print('jocker with BF(jocker):', str_A, '|',len(maxA_vertices))
-    #
-    # maxA_vertices, maxA_phi, edge_to_cut = jocker_CommExpand(edges, vertices_A, phi, BF_conductance_method='greedy')
-    # str_A = ' '.join(str(e) for e in maxA_vertices)
-    # print('jocker with BF(greedy):', str_A, '|', len(maxA_vertices))
 
 def compete(path,timeout):
     edges, vertices_A, phi = read_txt(path)
     maxA_vertices, maxA_phi = Genetic_Algorithms_CommExpand(edges, vertices_A, phi,timeout)
-    maxA_vertices = set(maxA_vertices)
     str_A = ' '.join(str(e) for e in maxA_vertices)
-    print(str_A, '|',len(maxA_vertices), '|',maxA_phi)
+    print(str_A)
+    #print(str_A, '|',len(maxA_vertices), '|',maxA_phi)
     return maxA_vertices, edges, phi
 
 
 def run_all(path):
-    #greedy(path); print('greedy')
-    #jocker(path); print('joker')
+    greedy(path); print('greedy')
+    joker(path); print('joker')
     brute_force(path); print('brute_force')
     compete(path, timeout=10); print('Genetic_Algorithms')
+
+def test_on_batch():
+    folders = ['26','40-50','80-100']
+    # folders = ['26']
+    for folder in folders:
+        if folder == '26':
+            timeouts = [1, 5, 10, 30, 60, 120]
+        else:
+            timeouts = [1, 10, 30, 60, 5 * 60, 10 * 60, 20 * 60]
+
+        for infile in glob.glob1('D:/PycharmProjects/optComb/test/comm/' + folder, 'inputComm*.txt'):
+            path = 'test/comm/' + folder + '/' + infile
+            print(infile, '#####################')
+            temp_data = []
+            temp_data2 = []
+            temp_data3 = []
+            temp_data.append(infile.split('.')[0])
+            temp_data2.append(infile.split('.')[0])
+            temp_data3.append(infile.split('.')[0])
+
+            for time in timeouts:
+                A, edges, phi_original = compete(path, timeout=time)
+                if folder == '26':
+                    Aphi_pred, _ = bruteForce_graphCond(edges, A)
+                    temp_data3.append(Aphi_pred)
+                str_A = ' '.join(str(e) for e in A)
+                temp_data.append(len(A))
+                temp_data2.append(str_A)
+                print(temp_data, temp_data2, temp_data3)
+            if folder == '26':
+                A_brute = brute_force(path)
+                str_A = ' '.join(str(e) for e in A_brute)
+                temp_data.append(len(A_brute))
+            filepath = 'comm_compete_results_rangeOf_' + folder + '.xlsx'
+            if not os.path.exists(filepath):
+                wb = Workbook()
+                sheet = wb.active
+                headers = list(map(str, timeouts))
+                headers.insert(0, 'name')
+                sheet.append(headers)
+                source = wb['Sheet']
+                target1 = wb.copy_worksheet(source)
+                target2 = wb.copy_worksheet(source)
+                source.title = 'A size'
+                target1.title = 'A ver'
+                target2.title = 'A phi brute'
+                wb.save(filepath)
+            wb = load_workbook(filepath)
+            source1 = wb['A size']
+            source2 = wb['A ver']
+            source3 = wb['A phi brute']
+            source1.append(temp_data)
+            source2.append(temp_data2)
+            source3.append(temp_data3)
+            wb.save(filepath)
 
 
 if __name__ == '__main__':
     main()
-
-    #run_all('nimrod.txt')
-
-    timeouts=[5,10,20,30,50]
-    for time in timeouts:
-        for infile in glob.glob1('D:/PycharmProjects/optComb/test', 'inputComm*.txt'):
-        #for infile in glob.glob1('C:/Users/ran/PycharmProjects/optComb', 'inputComm_6*.txt'):
-            path = 'test/' + infile
-            print(infile, '#####################')
-
-            #run_all(infile)
-            #A = brute_force(infile)
-            #A = brute_force_under(infile,20)
-
-            A, edges,phi_original = compete(path, timeout=time)
-            phi_pred_A, _ = bruteForce_graphCond(edges,A)
-
-            str_A = ' '.join(str(e) for e in A)
-            temp_data = [infile.split('.')[0],str_A, len(A),phi_pred_A,phi_original,time]
-            print(temp_data)
-            #filepath = 'comm_bt_results.xlsx'
-            filepath = 'comm_compete_results.xlsx'
-            if not os.path.exists(filepath):
-                wb = Workbook()
-                sheet = wb.active
-                sheet.append(['name', 'A', 'A num','phi_pred_A','phi_original','time'])
-                wb.save(filepath)
-            wb = load_workbook(filepath)
-            sheet = wb.active
-            sheet.append(temp_data)
-            wb.save(filepath)
-
-
-    # run_all('try.txt')
-    # print('#####################')
-    # run_all('try2.txt')
-    # print('#####################')
-    # run_all('try3.txt')
-    # # print('#####################')
-    # # run_all('try4.txt') # not good!!!!!
-    # print('#####################')
-    # run_all('try5.txt')
-    # # print('#####################')
-    # # run_all('try6.txt')
-
-    # print('#####################')
-    # greedy('try.txt')
-    # #brute_force('try.txt')
-    # print('#####################')
-    # greedy('try2.txt')
-    # #brute_force('try2.txt')
-    # print('#####################')
-    # greedy('try3.txt')
-    # #brute_force('try3.txt')
-    # print('#####################')
-    # greedy('try4.txt')
-    # #brute_force('try4.txt')
-    # print('#####################')
-    # greedy('try5.txt')
-    # #brute_force('try5.txt')
-    # print('#####################')
-    # greedy('try6.txt')
-    # #brute_force('try6.txt')
-    # print('#####################')

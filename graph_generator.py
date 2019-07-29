@@ -25,19 +25,23 @@ def touched_ver(edges,vertices_A_original):
     touch_ver = [item for item in touch_ver if item not in vertices_A_original] #get vertices of A_ B
     return touch_ver
 
-def graph_generator(n, p, A_number):
+def graph_generator(n, p, A_number,gen_community=True):
     """
     :param n: number of vertices
     :param p: number of edges
     :param A_number: number of vertices in A
     :return: edges, A, phi
     """
+
     from_n = 1
     to_n = n+1
     vertices = random.sample(range(from_n, to_n), n)
     edges = get_random_edges(vertices, p)
-    A, Aphi = get_random_A_Phi(edges,A_number)
-
+    if gen_community:
+        A, Aphi = get_random_A_Phi(edges,A_number)
+    else:
+        A = []
+        Aphi = 0
     return edges, A, Aphi
 
 def get_random_A_Phi(edges,A_number):
@@ -137,9 +141,9 @@ if __name__ == '__main__':
     # lower_limit_vertices = args.lower_limit_vertices
 
     filepath = 'test data.xlsx'
-    number_of_txt=5
-    upper_limit_vertices=10
-    lower_limit_vertices=7
+    number_of_txt=10
+    upper_limit_vertices=500
+    lower_limit_vertices=400
 
 
 
@@ -158,31 +162,38 @@ if __name__ == '__main__':
     k = 0
     while k < number_of_txt:
         n = np.random.randint(lower_limit_vertices, upper_limit_vertices)
-        p=np.random.randint(round(n)-1,ncr(n, 2))
-        #p = np.random.randint(round(n/2)+1,round(n*1.5))
-        A_number = np.random.randint(4, round(n / 2) + 1)
-        edges, A, Aphi = graph_generator(n, p, A_number)
+        #p=np.random.randint(round(n)-1,ncr(n, 2))
+        p = np.random.randint(round(n)-1,round(n*3))
+        #A_number = np.random.randint(4, round(n / 2) + 1)
+        A_number = np.random.randint(4, min(round(n / 2) + 1, 11))
         print('try  | n:', n, '| p:', p, '| A_number:', A_number)
-        phi_graph, _ = bruteForce_graphCond(edges)
-        if phi_graph > 0 and phi_graph < Aphi:
+        edges, A, Aphi = graph_generator(n, p, A_number, gen_community=False)
+
+        #phi_graph, _ = bruteForce_graphCond(edges)
+        #if phi_graph > 0 and phi_graph < Aphi:
+        if True:
             vertices = [val for sublist in edges for val in sublist]  # get all vertices
             vertices = list(set(vertices))
-            inputComm_name = 'inputComm_6' + str(k)
-            inputGraph_name = 'inputGraph_6' + str(k)
-            write_txt(inputComm_name, edges, A, Aphi)
+            inputComm_name = 'inputComm_large3' + str(k)
+            inputGraph_name = 'inputGraph_large3' + str(k)
+            #write_txt(inputComm_name, edges, A, Aphi)
             write_txt(inputGraph_name, edges)
             k+=1
 
-            temp_data = [inputComm_name, len(edges), len(vertices),len(vertices)/len(edges) , phi_graph,len(A), Aphi]
+            #temp_data = [inputComm_name, len(edges), len(vertices),len(vertices)/len(edges) , phi_graph,len(A), Aphi]
+            temp_data = [inputComm_name, len(edges), len(vertices),len(vertices)/len(edges), len(A), Aphi]
+
             print(temp_data)
             if not os.path.exists(filepath):
                 wb = Workbook()
                 sheet = wb.active
-                sheet.append(['name', 'edges', 'vertices','retio' ,'phi_graph' ,'A vertices', 'Aphi'])
+                #sheet.append(['name', 'edges', 'vertices','retio' ,'phi_graph' ,'A vertices', 'Aphi'])
+                sheet.append(['name', 'edges', 'vertices','retio','A vertices', 'Aphi'])
+
                 wb.save(filepath)
             wb = load_workbook(filepath)
             sheet = wb.active
             sheet.append(temp_data)
             wb.save(filepath)
-        else:
-            print('phi_graph > Aphi:', phi_graph > Aphi, 'phi_graph > 0:', phi_graph > 0)
+        #else:
+            #print('phi_graph > Aphi:', phi_graph > Aphi, 'phi_graph > 0:', phi_graph > 0)
