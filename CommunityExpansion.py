@@ -143,7 +143,7 @@ def test_on_batch():
         if folder == '26':
             timeouts = [1, 5, 10, 30, 60, 120]
         else:
-            timeouts = [1, 10, 30, 60, 5 * 60, 10 * 60, 20 * 60]
+            timeouts = [15, 30, 60, 5 * 60, 10 * 60, 20 * 60]
 
         for infile in glob.glob1('D:/PycharmProjects/optComb/test/comm/' + folder, 'inputComm*.txt'):
             path = 'test/comm/' + folder + '/' + infile

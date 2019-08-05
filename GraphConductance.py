@@ -86,7 +86,6 @@ def lower_bound(path):
 
 def test_on_batch():
     folders = ['26','40-50', '80-100','400-500']
-    # folders = ['26']
     for folder in folders:
         if folder == '26':
             timeouts = [1, 5, 10, 30, 60]
